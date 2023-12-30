@@ -5,22 +5,46 @@ from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity
 import cv2 as cv
 import numpy as np
+from filesDuplicateFinder.include.resizeImages import ImageResize
 
 class ImageCompare:
   """
   Class to compare images
   """
-  def __init__(self, base_image, compare_image):
-    self.base_image = base_image
-    self.compare_image = compare_image
-    self.cv_base_image = cv.imread(base_image)
-    self.cv_compare_image = cv.imread(compare_image)
+  def __init__(self, base_image, compare_image, verbose=0, show_images=False):
+    
+    if type(base_image) != np.ndarray:
+      self.base_image = base_image
+      self.cv_base_image = cv.imread(base_image)
   
-  def image_pixel_differences(self):
+    if type(compare_image) != np.ndarray:
+      self.compare_image = compare_image
+      self.cv_compare_image = cv.imread(compare_image)
+    
+    if type(base_image) == np.ndarray:
+      self.cv_base_image = base_image
+    
+    if type(compare_image) == np.ndarray:
+      self.cv_compare_image = compare_image
+    
+    self.verbose = verbose
+    self.show_images = show_images
+    
+    h1, w1 = self.cv_base_image.shape[:2]
+    h2, w2 = self.cv_compare_image.shape[:2]
+    
+    if h1 > h2 or w1 > w2:
+      self.cv_base_image = ImageResize(self.base_image).resize_and_pad((h2, w2))
+      return
+    
+    if h1 < h2 or w1 < w2:
+      self.cv_compare_image = ImageResize(self.compare_image).resize_and_pad((h1, w1))
+      return
+  
+  
+  def image_pixel_differences(self) -> bool:
     """
     Calculates the bounding box of the non-zero regions in the image.
-    :param base_image: target image to find
-    :param compare_image:  set of images containing the target image
     :return: The bounding box is returned as a 4-tuple defining the
             left, upper, right, and lower pixel coordinate. If the image
             is completely empty, this method returns None.
@@ -38,32 +62,8 @@ class ImageCompare:
       return False
     else:
       return True
-
-  def image_similarity_histogram(self):
-    """
-    Calculates de similarity between two images using the histogram algorithm
-    """
     
-    color = ('b','g','r')
-    hist_img1 = []
-    hist_img2 = []
-    for i,col in enumerate(color):
-      histr = cv.calcHist([self.cv_base_image],[i],None,[256],[0,256])
-      plt.plot(histr,color = col)
-      plt.xlim([0,256])
-      hist_img1.append(histr)
-    plt.show()
-    
-    for i,col in enumerate(color):
-      histr = cv.calcHist([self.cv_compare_image],[i],None,[256],[0,256])
-      plt.plot(histr,color = col)
-      plt.xlim([0,256])
-      hist_img2.append(histr)
-    plt.show()
-
-    # Compare the histograms
-    
-  def image_similarity(self):
+  def image_similarity(self) -> float:
     """
     Calculates de similarity between two images using the SSIM algorithm
     """
@@ -74,7 +74,12 @@ class ImageCompare:
 
     # Compute SSIM between two images
     (score, diff) = structural_similarity(first_gray, secon_gray, full=True)
-    print("Image similarity", score)
+    
+    if self.verbose > 0:
+      print("Image similarity (SSIM): ", score)
+    
+    if not self.show_images:
+      return score
 
     # The diff image contains the actual image differences between the two images
     # and is represented as a floating point data type in the range [0,1] 
@@ -100,6 +105,21 @@ class ImageCompare:
         cv.drawContours(mask, [c], 0, (0,255,0), -1)
         cv.drawContours(filled_after, [c], 0, (0,255,0), -1)
 
+    cv.namedWindow('base img', cv.WINDOW_NORMAL)
+    cv.resizeWindow('base img', 1440, 800)
+    
+    cv.namedWindow('cmp img', cv.WINDOW_NORMAL)
+    cv.resizeWindow('cmp img', 1440, 800)
+    
+    cv.namedWindow('diff', cv.WINDOW_NORMAL)
+    cv.resizeWindow('diff', 1440, 800)
+    
+    cv.namedWindow('mask', cv.WINDOW_NORMAL)
+    cv.resizeWindow('mask', 1440, 800)
+    
+    cv.namedWindow('filled after', cv.WINDOW_NORMAL)
+    cv.resizeWindow('filled after', 1440, 800)
+
     cv.imshow('base img', self.cv_base_image)
     cv.imshow('cmp img', self.cv_compare_image)
     cv.imshow('diff', diff)
@@ -110,7 +130,7 @@ class ImageCompare:
     return score
 
 if __name__ == '__main__':
-  img_cmp = ImageCompare(argv[1], argv[2])
+  img_cmp = ImageCompare(argv[1], argv[2], verbose=1, show_images=True)
   
   img_cmp.image_similarity()
   if img_cmp.image_pixel_differences():
