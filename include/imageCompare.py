@@ -1,11 +1,13 @@
 from sys import argv
+
 from PIL import Image
 from PIL import ImageChops
 from matplotlib import pyplot as plt
-from skimage.metrics import structural_similarity
 import cv2 as cv
 import numpy as np
-from filesDuplicateFinder.include.resizeImages import ImageResize
+from skimage.metrics import structural_similarity
+
+from resizeImages import ImageResize
 
 class ImageCompare:
   """
@@ -34,11 +36,11 @@ class ImageCompare:
     h2, w2 = self.cv_compare_image.shape[:2]
     
     if h1 > h2 or w1 > w2:
-      self.cv_base_image = ImageResize(self.base_image).resize_and_pad((h2, w2))
+      self.cv_base_image = ImageResize(self.cv_base_image).resize_and_pad((h2, w2))
       return
     
     if h1 < h2 or w1 < w2:
-      self.cv_compare_image = ImageResize(self.compare_image).resize_and_pad((h1, w1))
+      self.cv_compare_image = ImageResize(self.cv_compare_image).resize_and_pad((h1, w1))
       return
   
   
@@ -130,7 +132,7 @@ class ImageCompare:
     return score
 
 if __name__ == '__main__':
-  img_cmp = ImageCompare(argv[1], argv[2], verbose=1, show_images=True)
+  img_cmp = ImageCompare(argv[1], argv[2], verbose=1, show_images=False)
   
   img_cmp.image_similarity()
   if img_cmp.image_pixel_differences():

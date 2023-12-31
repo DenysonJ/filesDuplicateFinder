@@ -6,7 +6,11 @@ class ImageResize:
     self.image = image
     self.verbose = verbose
     self.show_images = show_images
-    self.cv_image = cv.imread(image)
+    if type(image) != np.ndarray:
+      self.cv_image = cv.imread(image)
+      return
+    
+    self.cv_image = image
   
   def __pading_calc(self, aspect: float, sh: int, sw: int) -> tuple[int, int, int, int, int, int]:  
     # compute scaling and pad sizing
@@ -38,7 +42,7 @@ class ImageResize:
   
   def resize_and_pad(self, size: tuple[int, int], padColor: int = 0) -> np.ndarray:
 
-    h, w = self.image.shape[:2]
+    h, w = self.cv_image.shape[:2]
     sh, sw = size
 
     # interpolation method
@@ -53,11 +57,11 @@ class ImageResize:
     pad_left, pad_right, pad_top, pad_bot, new_h, new_w = self.__pading_calc(aspect, sh, sw)
 
     # set pad color
-    if len(self.image.shape) == 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
+    if len(self.cv_image.shape) == 3 and not isinstance(padColor, (list, tuple, np.ndarray)): # color image but only one color provided
       padColor = [padColor]*3
 
     # scale and pad
-    scaled_img = cv.resize(self.image, (new_w, new_h), interpolation=interp)
+    scaled_img = cv.resize(self.cv_image, (new_w, new_h), interpolation=interp)
     scaled_img = cv.copyMakeBorder(scaled_img, pad_top, pad_bot, pad_left, pad_right, borderType=cv.BORDER_CONSTANT, value=padColor)
 
     return scaled_img
