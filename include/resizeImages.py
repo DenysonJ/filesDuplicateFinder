@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 
+
 class ImageResize:
   def __init__(self, image, verbose=0, show_images=False):
     self.image = image
