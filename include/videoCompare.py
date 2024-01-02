@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 
-from imageCompare import ImageCompare
+from include.imageCompare import ImageCompare
 
 
 class VideoCompare:
