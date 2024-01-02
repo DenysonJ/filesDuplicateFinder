@@ -103,7 +103,7 @@ class DuplicateFinder:
     allFiles = filter(lambda x: x.split('.')[-1] not in self.exclude, allFiles)
 
     if self.include:
-        allFiles = filter(lambda x: x.split('.')[-1] in self.include, allFiles)
+      allFiles = filter(lambda x: x.split('.')[-1] in self.include, allFiles)
 
     return list(allFiles)
 
@@ -137,7 +137,7 @@ class DuplicateFinder:
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.type == 'soft':
-        return self.compare_files_soft(file1, file2)
+      return self.compare_files_soft(file1, file2)
 
     return self.compare_files_hard(file1, file2)
 
@@ -154,19 +154,19 @@ class DuplicateFinder:
     """
 
     if extension1 == extension2:
-        return True
+      return True
 
     if extension1 in self.videoExtensions and extension2 in self.imageExtensions:
-        return False
+      return False
 
     if extension1 in self.imageExtensions and extension2 in self.videoExtensions:
-        return False
+      return False
 
     if extension1 in self.videoExtensions and extension2 in self.videoExtensions:
-        return True
+      return True
 
     if extension1 in self.imageExtensions and extension2 in self.imageExtensions:
-        return True
+      return True
 
     return False
 
@@ -191,10 +191,12 @@ class DuplicateFinder:
       return validate_file_contents(file1, file2)
 
     if file1Extension in self.videoExtensions:
-      return VideoCompare(file1, file2, verbose=self.verbose, similarity=self.similarity).compare_videos_hard()
+      return VideoCompare(file1, file2, verbose=self.verbose, 
+                          similarity=self.similarity).compare_videos_hard()
 
     if file1Extension in self.imageExtensions:
-      return ImageCompare(file1, file2, verbose=self.verbose, similarity=self.similarity).image_pixel_differences()
+      return ImageCompare(file1, file2, verbose=self.verbose, 
+                          similarity=self.similarity).image_pixel_differences()
 
     return validate_file_contents(file1, file2)
 
@@ -219,13 +221,15 @@ class DuplicateFinder:
       return False
 
     if file1.split('.')[-1] in self.videoExtensions:
-      result = VideoCompare(file1, file2, verbose=self.verbose, similarity=self.similarity).compare_videos_soft()
+      result = VideoCompare(file1, file2, verbose=self.verbose, 
+                            similarity=self.similarity).compare_videos_soft()
       if self.verbose > 0:
         print(f"Video similarity: {result[1]}")
       return result[0]
 
     if file1.split('.')[-1] in self.imageExtensions:
-      result = ImageCompare(file1, file2, verbose=self.verbose, similarity=self.similarity).image_similarity()
+      result = ImageCompare(file1, file2, verbose=self.verbose, 
+                            similarity=self.similarity).image_similarity()
       if self.verbose > 0:
         print(f"Image similarity: {result[1]}")
       return result[0]
