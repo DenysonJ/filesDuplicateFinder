@@ -94,8 +94,8 @@ class VideoCompare:
     if video1_length != video2_length:
       if self.verbose > 0:
         print("Videos have different lengths")
-        print(f"Video 1: {video1_length} seconds")
-        print(f"Video 2: {video2_length} seconds")
+        print("Video 1: {:.4f} seconds".format(video1_length))
+        print("Video 2: {:.4f} seconds".format(video2_length))
       return False, 0
     
     scores = []
@@ -115,13 +115,18 @@ class VideoCompare:
         raise Exception("Error reading frames")
       
       # Compare the frames
-      cmp = ImageCompare(frame1, frame2, self.verbose, False)
+      cmp = ImageCompare(frame1, frame2, self.verbose - 1, False)
       score = cmp.image_similarity()
       
       scores.append(score)
+      
+    result = np.mean(scores)
+    
+    if self.verbose > 0:
+      print("Video similarity (SSIM): {:.4f}".format(result))
 
     # If all frames are similar, return True
-    return np.mean(scores) > self.similarity, np.mean(scores)
+    return result >= self.similarity, result 
 
 if __name__ == '__main__':
   import sys
