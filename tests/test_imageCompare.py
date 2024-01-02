@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 from include.imageCompare import ImageCompare
 
@@ -32,3 +33,11 @@ class TestImageCompare(unittest.TestCase):
               'fixtures/594_900x900.jpg').image_similarity()
     self.assertFalse(result[0])
     self.assertLess(result[1], 0.85)
+
+  def test_image_compare_verbose(self):
+    ImageCompare(
+      'fixtures/sample_640x426.bmp',
+      'fixtures/594_900x900.jpg',
+      verbose=1).image_similarity()
+    output = sys.stdout.getvalue().strip()
+    self.assertEqual(output, 'Image similarity (SSIM): 0.1777')

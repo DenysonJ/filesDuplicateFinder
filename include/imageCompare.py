@@ -83,7 +83,7 @@ class ImageCompare:
     (score, diff) = structural_similarity(first_gray, secon_gray, full=True)
     
     if self.verbose > 0:
-      print("Image similarity (SSIM): ", score)
+      print("Image similarity (SSIM): {:.4f}".format(score))
     
     if not self.show_images:
       return self.similarity <= score, score

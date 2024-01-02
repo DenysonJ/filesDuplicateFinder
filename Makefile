@@ -1,5 +1,5 @@
 run_tests:
-	python3 -m unittest discover .
+	python3 -m unittest discover . -b
 
 generate_coverage:
 	coverage run -m unittest discover .
