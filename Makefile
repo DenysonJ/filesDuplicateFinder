@@ -4,12 +4,12 @@ run_tests:
 
 # Generate coverage report in terminal
 generate_coverage:
-	coverage run -m unittest discover .
+	coverage run -m unittest discover . -b
 	coverage report -m ./*/*.py ./*.py 
 
 # Generate coverage report in html format
 generate_coverage_html:
-	coverage run -m unittest discover .
+	coverage run -m unittest discover . -b
 	coverage html ./*/*.py ./*.py
 
 # Clean coverage reports
