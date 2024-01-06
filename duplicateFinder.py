@@ -1,9 +1,11 @@
 import os
 from argparse import ArgumentParser
+from typing import Callable, Any
 
 from include.videoCompare import VideoCompare
 from include.imageCompare import ImageCompare
 from include.fileByteCompare import validate_file_contents
+import include.files as files
 
 
 def parser() -> ArgumentParser:
@@ -32,6 +34,10 @@ def parser() -> ArgumentParser:
                       choices=['delete', 'move', 'link'], default='delete', type=str)
   parser.add_argument(
       '-o', '--output', help='Output file to write duplicate files', default='duplicated', type=str)
+
+  parser.add_argument(
+      '-f', '--fileChoice', help='Choose which file to keep', 
+      choices=['first', 'last', 'bigger', 'smaller', 'best'], default='first', type=str)
 
   group = parser.add_mutually_exclusive_group()
 
@@ -86,6 +92,7 @@ class DuplicateFinder:
     self.include = self.args.include
     self.action = self.args.action
     self.output = self.args.output
+    self.fileChoice = self.args.fileChoice
 
     self.duplicates = {}
 
@@ -98,7 +105,7 @@ class DuplicateFinder:
     """
     allFiles = []
 
-    allFiles = self.get_files() if not self.recursive else self.get_recursive_files()
+    allFiles = files.get_files(self.directory) if not self.recursive else files.get_recursive_files(self.directory)
 
     allFiles = filter(lambda x: x.split('.')[-1] not in self.exclude, allFiles)
 
@@ -106,24 +113,6 @@ class DuplicateFinder:
       allFiles = filter(lambda x: x.split('.')[-1] in self.include, allFiles)
 
     return list(allFiles)
-
-  def get_recursive_files(self) -> list[str]:
-    """
-    Get all files in the directory recursively.
-
-    Returns:
-        list[str]: List of file paths.
-    """
-    return [os.path.join(dirpath, f) for (dirpath, dirnames, filenames) in os.walk(self.directory) for f in filenames]
-
-  def get_files(self) -> list[str]:
-    """
-    Get all files in the directory.
-
-    Returns:
-        list[str]: List of file paths.
-    """
-    return [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
 
   def compare_files(self, file1: str, file2: str) -> bool:
     """
@@ -249,12 +238,122 @@ class DuplicateFinder:
             os.path.join(self.directory, allFiles[j])
           ):
           if allFiles[i] not in self.duplicates:
-            self.duplicates[allFiles[i]] = [allFiles[j]]
+            self.duplicates[os.path.join(self.directory, allFiles[i])] = [
+              os.path.join(self.directory, allFiles[j])]
+
+  def order_by_info(self, list: list[str], func: Callable[[str], Any], reverse: bool) -> list[str]:
+    """
+    Orders the given list of files based on the information returned by the provided function.
+
+    Args:
+      list (list[str]): The list of files to be ordered.
+      func (Callable[[str], Any]): A function that takes a file path as input and
+        returns the information used for ordering.
+      reverse (bool): If True, the list will be ordered in reverse (descending)
+        order. If False, the list will be ordered in ascending order.
+
+    Returns:
+      list[str]: The ordered list of files.
+    """
+    dic = { func(file): file for file in list }.items()
+    sort_list = sorted(dic, key=lambda x: x[0], reverse=reverse)
+
+    return [file[1] for file in sort_list]
+
+  def order_by_best_quality(self, list: list[str], reverse: bool) -> list[str]:
+    """
+    Orders the given list of files based on the quality of the file.
+    Args:
+        list (list[str]): The list of files to be ordered.
+        reverse (bool): If True, the list will be ordered in reverse (descending)
+        order. If False, the list will be ordered in ascending order.
+
+    Returns:
+        list[str]: The ordered list of files.
+    """
+    fileExtension = os.path.splitext(list[0])[1]
+    if fileExtension in self.videoExtensions:
+      return self.order_by_info(list, files.get_video_pixels, reverse)
+
+    if fileExtension in self.imageExtensions:
+      return self.order_by_info(list, files.get_pixels, reverse)
+
+    raise NotImplementedError(f"ERROR: Ordering by best quality is not\
+      implemented for {fileExtension} files.")
+
+  def choose_duplicate(self) -> dict[str, list[str]]:
+    """
+    Choose which duplicate file to keep.
+
+    Returns: 
+      dict[str, list[str]]: A dictionary containing the file to keep as the key
+        and the files to delete/move/link as the values.
+    """
+    choice = {
+      'first': lambda x: self.order_by_info(x, files.return_file_create_time, False),
+      'last': lambda x: self.order_by_info(x, files.return_file_create_time, True),
+      'bigger': lambda x: self.order_by_info(x, files.return_file_size, True),
+      'smaller': lambda x: self.order_by_info(x, files.return_file_size, False),
+      'best': lambda x: self.order_by_best_quality(x, False)
+    }[self.fileChoice]
+
+    duplicates = {}
+
+    for file in self.duplicates:
+      list = choice([*self.duplicates[file], file])
+      duplicates[list[0]] = list[1:]
+
+    if self.verbose > 0:
+      print(duplicates)
+
+    return duplicates
+
+  def delete_duplicates(self, dic: dict[str, list[str]]) -> None:
+    """
+    Delete duplicate files.
+    """
+    for file in dic:
+      for duplicate in dic[file]:
+        os.remove(duplicate)
+
+  def move_duplicates(self, dic: dict[str, list[str]]) -> None:
+    """
+    Move duplicate files.
+    """
+    os.makedirs(self.output, exist_ok=True)
+    for file in dic:
+      for duplicate in dic[file]:
+        fileName = os.path.basename(duplicate)
+        os.rename(duplicate, os.path.join(self.output, fileName))
+
+  def link_duplicates(self, dic: dict[str, list[str]]) -> None:
+    """
+    Create soft links for duplicate files.
+    """
+    os.makedirs(self.output, exist_ok=True)
+    for file in dic:
+      for duplicate in dic[file]:
+        fileName = os.path.basename(duplicate)
+        os.symlink(os.path.abspath(duplicate), os.path.join(self.output, fileName))
+
+  def action_on_duplicates(self, dic: dict[str, list[str]]) -> None:
+    """
+    Perform the action on duplicate files.
+    """
+    {
+      'delete': self.delete_duplicates,
+      'move': self.move_duplicates,
+      'link': self.link_duplicates
+    }[self.action](dic)
+
+  def main(self) -> None:
+    """
+    Main function.
+    """
+    self.search()
+    self.action_on_duplicates(self.choose_duplicate())
 
 if __name__ == '__main__':
   duplicate = DuplicateFinder()
-  
-  duplicate.search()
-  
-  print(duplicate.duplicates)
-    
+
+  duplicate.main()
