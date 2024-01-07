@@ -20,7 +20,7 @@ def get_files(directory: str) -> list[str]:
   Returns:
       list[str]: List of file paths.
   """
-  return [f for f in os.listdir(directory) 
+  return [os.path.join(directory, f) for f in os.listdir(directory)
             if isFile(f, directory)]
   
 def isFile(file: str, dir: str) -> bool:
