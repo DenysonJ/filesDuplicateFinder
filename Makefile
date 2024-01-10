@@ -12,6 +12,11 @@ generate_coverage_html:
 	coverage run -m unittest discover . -b
 	coverage html ./*/*.py ./*.py
 
+# Exclude tests from coverage report
+generate_coverage_exclude_tests:
+	coverage run -m unittest discover . -b
+	coverage html --omit="*test*" ./*/*.py ./*.py
+
 # Clean coverage reports
 clean:
 	rm -rf .coverage htmlcov
