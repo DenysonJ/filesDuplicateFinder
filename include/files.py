@@ -115,4 +115,4 @@ def get_video_pixels(video: str) -> float:
       float: Number of pixels in the video.
   """
   width, height, fps = get_video_info(video)
-  return get_pixels((width, height)) * fps
+  return width * height * fps
