@@ -13,7 +13,8 @@ class ImageCompare:
   """
   Class to compare images
   """
-  def __init__(self, base_image, compare_image, verbose=0, show_images=False, similarity=0.85):
+  def __init__(
+    self, base_image, compare_image, verbose=0, show_images=False, similarity=0.85):
     
     if type(base_image) != np.ndarray:
       self.base_image = base_image
@@ -66,7 +67,13 @@ class ImageCompare:
     else:
       return True
     
-  def image_similarity(self) -> tuple[bool, float]:
+  def image_similarity(
+    self) -> tuple[bool, float] | tuple[bool,
+                                        float,
+                                        tuple[
+                                          np.ndarray,
+                                          np.ndarray,
+                                          np.ndarray]]:
     """
     Calculates de similarity between two images using the SSIM algorithm
     
@@ -97,7 +104,10 @@ class ImageCompare:
     # Threshold the difference image, followed by finding contours to
     # obtain the regions of the two input images that differ
     thresh = cv.threshold(diff, 0, 255, cv.THRESH_BINARY_INV | cv.THRESH_OTSU)[1]
-    contours = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours = cv.findContours(
+      thresh.copy(),
+      cv.RETR_EXTERNAL,
+      cv.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
 
     mask = np.zeros(self.cv_base_image.shape, dtype='uint8')
@@ -111,37 +121,6 @@ class ImageCompare:
         cv.rectangle(self.cv_compare_image, (x, y), (x + w, y + h), (36,255,12), 2)
         cv.drawContours(mask, [c], 0, (0,255,0), -1)
         cv.drawContours(filled_after, [c], 0, (0,255,0), -1)
-
-    cv.namedWindow('base img', cv.WINDOW_NORMAL)
-    cv.resizeWindow('base img', 1440, 800)
     
-    cv.namedWindow('cmp img', cv.WINDOW_NORMAL)
-    cv.resizeWindow('cmp img', 1440, 800)
-    
-    cv.namedWindow('diff', cv.WINDOW_NORMAL)
-    cv.resizeWindow('diff', 1440, 800)
-    
-    cv.namedWindow('mask', cv.WINDOW_NORMAL)
-    cv.resizeWindow('mask', 1440, 800)
-    
-    cv.namedWindow('filled after', cv.WINDOW_NORMAL)
-    cv.resizeWindow('filled after', 1440, 800)
-
-    cv.imshow('base img', self.cv_base_image)
-    cv.imshow('cmp img', self.cv_compare_image)
-    cv.imshow('diff', diff)
-    cv.imshow('mask', mask)
-    cv.imshow('filled after', filled_after)
-    cv.waitKey(0)
-    
-    return self.similarity <= score, score
-
-if __name__ == '__main__':
-  img_cmp = ImageCompare(argv[1], argv[2], verbose=1, show_images=False)
-  
-  img_cmp.image_similarity()
-  if img_cmp.image_pixel_differences():
-    print("Images are the same")
-    exit(0)
-  print("Images are different")
+    return self.similarity <= score, score, (diff, mask, filled_after)
   
