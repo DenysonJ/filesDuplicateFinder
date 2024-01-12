@@ -16,21 +16,24 @@ class TestVideoCompare(unittest.TestCase):
     self.different = VideoCompare(
                       'fixtures/sample_640x360.mp4',
                       'fixtures/sample_960x400_ocean_with_audio.mov')
-      
+
   def test_video_compare_hard(self):
     self.assertFalse(self.similar.compare_videos_hard())
     self.assertTrue(self.equal.compare_videos_hard())
-    
+
+  def test_video_compare_hard_different(self):
+    self.assertFalse(self.different.compare_videos_hard())
+
   def test_video_compare_soft_equal(self):
     result = self.equal.compare_videos_soft()
     self.assertTrue(result[0])
     self.assertEqual(result[1], 1.0)
-    
+
   def test_video_compare_soft_similar(self):
     result = self.similar.compare_videos_soft()
     self.assertTrue(result[0])
     self.assertGreaterEqual(result[1], 0.85)
-    
+
   def test_video_compare_soft_different(self):
     result = self.different.compare_videos_soft()
     self.assertFalse(result[0])
@@ -45,7 +48,7 @@ class TestVideoCompare(unittest.TestCase):
     self.different.compare_videos_soft()
     output = sys.stdout.getvalue().strip()
     self.assertEqual(output, message)
-  
+
   def test_video_compare_verbose_similar(self):
     message = "Video similarity (SSIM): 0.9791"
     self.similar.verbose = 1
