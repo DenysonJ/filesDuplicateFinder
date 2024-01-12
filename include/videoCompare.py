@@ -127,17 +127,3 @@ class VideoCompare:
 
     # If all frames are similar, return True
     return result >= self.similarity, result 
-
-if __name__ == '__main__':
-  import sys
-
-  if len(sys.argv) < 3:
-    print("Usage: python3 compareVideos.py <video1> <video2>")
-    exit(1)
-
-  video1 = sys.argv[1]
-  video2 = sys.argv[2]
-
-  vc = VideoCompare(video1, video2, 1)
-  print(vc.compare_videos_hard())
-  print(vc.compare_videos_soft())
