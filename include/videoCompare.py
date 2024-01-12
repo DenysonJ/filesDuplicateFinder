@@ -4,6 +4,13 @@ import numpy as np
 from include.imageCompare import ImageCompare
 
 
+class FrameError(Exception):
+  """
+  Exception raised when a frame is not read correctly.
+  """
+  pass
+
+
 class VideoCompare:
   """
   Class for comparing two videos based on their frames.
@@ -29,7 +36,9 @@ class VideoCompare:
 
   """
 
-  def __init__(self, base_video: str, compare_video: str, verbose: int=0, similarity: float=0.85) -> None:
+  def __init__(
+    self, base_video: str, compare_video: str, verbose: int=0, similarity: float=0.85) -> None:
+    
     self.base_video = base_video
     self.compare_video = compare_video
     self.verbose = verbose
@@ -62,7 +71,7 @@ class VideoCompare:
 
       # If either frame is not read correctly, return False
       if not ret1 or not ret2:
-        return False
+        raise FrameError("Error reading frames. Frame count: {}".format(i))
 
       # Compare the frames
       if not np.array_equal(frame1, frame2):
@@ -76,7 +85,8 @@ class VideoCompare:
     Compares the two videos with a similarity threshold.
 
     Returns:
-      tuple[bool, float]: A tuple containing a boolean indicating if the videos are similar and the average similarity score.
+      tuple[bool, float]: A tuple containing a boolean indicating if the videos
+        are similar and the average similarity score.
     """
     # Get the frame count of each video
     video1_frames = int(self.video1.get(cv.CAP_PROP_FRAME_COUNT))
@@ -112,7 +122,7 @@ class VideoCompare:
       
       # If either frame is not read correctly, return False
       if not ret1 or not ret2:
-        raise Exception("Error reading frames")
+        raise FrameError("Error reading frames. Frame count: {}".format(i))
       
       # Compare the frames
       cmp = ImageCompare(frame1, frame2, self.verbose - 1, False)
