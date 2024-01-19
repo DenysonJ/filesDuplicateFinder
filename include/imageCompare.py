@@ -2,7 +2,6 @@ from sys import argv
 
 from PIL import Image
 from PIL import ImageChops
-from matplotlib import pyplot as plt
 import cv2 as cv
 import numpy as np
 from skimage.metrics import structural_similarity
