@@ -27,13 +27,16 @@ def parser() -> ArgumentParser:
   parser.add_argument(
       '-s', '--similarity', help='Set the similarity threshold', default=0.85, type=float)
   parser.add_argument('-t', '--type', help='Set the type of comparison to use',
-                      choices=['soft', 'hard'], default='soft', type=str)
+                      choices=['soft', 'hard'], default='hard', type=str)
   parser.add_argument(
       '-r', '--recursive', help='Recursively search the directory', action='store_true')
   parser.add_argument('-a', '--action', help='Action to take on duplicate files',
                       choices=['delete', 'move', 'link'], default='delete', type=str)
   parser.add_argument(
-      '-o', '--output', help='Output file to write duplicate files', default='duplicated', type=str)
+      '-b', '--bulk', help='Confirm delete on all duplicate files, otherwise confirm each file',
+      action='store_true')
+  parser.add_argument(
+      '-o', '--output', help='Output directory to write duplicate files', default='duplicated', type=str)
 
   parser.add_argument(
       '-f', '--fileChoice', help='Choose which file to keep', 
@@ -42,9 +45,11 @@ def parser() -> ArgumentParser:
   group = parser.add_mutually_exclusive_group()
 
   group.add_argument(
-      '-e', '--exclude', help='Exclude these file types', nargs='+', default=[], type=str)
+      '-e', '--exclude', help='Exclude from the search all these file extensions',
+      nargs='+', default=[], type=str)
   group.add_argument(
-      '-i', '--include', help='Include these file types', nargs='+', default=[], type=str)
+      '-i', '--include', help='Include in the search only these file extensions',
+      nargs='+', default=[], type=str)
 
   return parser
 
@@ -56,6 +61,7 @@ class DuplicateFinder:
   Attributes:
       directory (str): The directory to search for duplicate files.
       verbose (int): The level of verbosity for output.
+      bulk (bool): Flag to indicate whether to confirm action on all duplicate files.
       similarity (float): The similarity threshold for file comparison.
       type (str): The type of comparison to use ('soft' or 'hard').
       recursive (bool): Flag to indicate whether to search the directory recursively.
@@ -66,6 +72,7 @@ class DuplicateFinder:
           'move', 
           or 'link').
       output (str): The output file to write duplicate files.
+      fileChoice (str): How to choose a file to keep when there are duplicates
       duplicates (dict): Dictionary to store duplicate files.
 
   Methods:
@@ -85,6 +92,7 @@ class DuplicateFinder:
 
     self.directory = self.args.directory
     self.verbose = self.args.verbose
+    self.bulk = self.args.bulk
     self.similarity = self.args.similarity
     self.type = self.args.type
     self.recursive = self.args.recursive
@@ -95,6 +103,7 @@ class DuplicateFinder:
     self.fileChoice = self.args.fileChoice
 
     self.duplicates = {}
+    self.countDuplicates = 0
 
   def get_all_files(self) -> list[str]:
     """
@@ -234,12 +243,31 @@ class DuplicateFinder:
     for i in range(len(allFiles)):
       for j in range(i+1, len(allFiles)):
         if self.compare_files(
-            os.path.join(self.directory, allFiles[i]),
-            os.path.join(self.directory, allFiles[j])
+            allFiles[i],
+            allFiles[j]
           ):
-          if allFiles[i] not in self.duplicates:
-            self.duplicates[os.path.join(self.directory, allFiles[i])] = [
-              os.path.join(self.directory, allFiles[j])]
+          if allFiles[i] not in self.get_all_duplicates():
+            self.duplicates[allFiles[i]] = [allFiles[j]]
+            self.countDuplicates += 1
+            continue
+          if allFiles[j] not in self.get_all_duplicates():
+            self.duplicates[allFiles[i]].append(allFiles[j])
+            self.countDuplicates += 1
+
+  def get_all_duplicates(self) -> set[str]:
+    """
+    Get all duplicate files.
+
+    Returns:
+        list[str]: List of duplicate files.
+    """
+    if len(self.duplicates) == 0:
+      return set()
+    
+    nestedList = list(self.duplicates.keys()) + [
+      item for sublist in list(self.duplicates.values()) for item in sublist]
+    
+    return set(nestedList)
 
   def order_by_info(self, list: list[str], func: Callable[[str], Any], reverse: bool) -> list[str]:
     """
@@ -272,6 +300,7 @@ class DuplicateFinder:
         list[str]: The ordered list of files.
     """
     fileExtension = os.path.splitext(list[0])[1]
+    fileExtension = fileExtension.replace('.', '')
     if fileExtension in self.videoExtensions:
       return self.order_by_info(list, files.get_video_pixels, reverse)
 
@@ -294,7 +323,7 @@ class DuplicateFinder:
       'last': lambda x: self.order_by_info(x, files.return_file_create_time, True),
       'bigger': lambda x: self.order_by_info(x, files.return_file_size, True),
       'smaller': lambda x: self.order_by_info(x, files.return_file_size, False),
-      'best': lambda x: self.order_by_best_quality(x, False)
+      'best': lambda x: self.order_by_best_quality(x, True)
     }[self.fileChoice]
 
     duplicates = {}
@@ -312,9 +341,17 @@ class DuplicateFinder:
     """
     Delete duplicate files.
     """
+    if self.bulk:
+      for file in dic:
+        for duplicate in dic[file]:
+          os.remove(duplicate)
+      return
+    
     for file in dic:
       for duplicate in dic[file]:
-        os.remove(duplicate)
+        read = input(f"Are you sure you want to delete {duplicate}? (y/n): ")
+        if read.lower() == 'y':
+          os.remove(duplicate)
 
   def move_duplicates(self, dic: dict[str, list[str]]) -> None:
     """
@@ -345,12 +382,32 @@ class DuplicateFinder:
       'move': self.move_duplicates,
       'link': self.link_duplicates
     }[self.action](dic)
+  
+  def print_duplicates(self) -> None:
+    """
+    Print the duplicate files.
+    """
+    for file in self.duplicates:
+      print(file)
+      for duplicate in self.duplicates[file]:
+        print(f"\t{duplicate}")
 
   def main(self) -> None:
     """
     Main function.
     """
     self.search()
+    if self.bulk and self.action == 'delete':
+      read = input("Are you sure you want to delete all {} duplicated files? (y/n): "
+                   .format(self.countDuplicates))
+      if read.lower() == 'y':
+        self.action_on_duplicates(self.choose_duplicate())
+        return
+      
+      self.print_duplicates()
+      # which action to take if the user doesn't confirm?
+      return
+    
     self.action_on_duplicates(self.choose_duplicate())
 
 if __name__ == '__main__':
