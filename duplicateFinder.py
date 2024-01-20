@@ -1,6 +1,6 @@
 import os
 from argparse import ArgumentParser
-from typing import Callable, Any
+from typing import Callable, Any, Sequence
 
 from include.videoCompare import VideoCompare
 from include.imageCompare import ImageCompare
@@ -76,19 +76,21 @@ class DuplicateFinder:
       duplicates (dict): Dictionary to store duplicate files.
 
   Methods:
+      main(): Search for all duplicated an perform the choosed action over them
+      search(): Get all duplicated files in the given directory with the given option
       get_all_files(): Get all files in the directory with the given option.
-      get_recursive_files(): Get all files in the directory recursively.
-      get_files(): Get all files in the directory.
       compare_files(file1: str, file2: str) -> bool: Compare two files.
       compare_files_hard(file1: str, file2: str) -> bool: Compare two files \
           using hard comparison.
+      compare_files_soft(file1: str, file2: str) -> bool: Compare two files \
+          using soft comparison.
   """
 
   videoExtensions = {'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm'}
   imageExtensions = {'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff', 'tif'}
 
-  def __init__(self) -> None:
-    self.args = parser().parse_args()
+  def __init__(self, args: Sequence[str] | None = None) -> None:
+    self.args = parser().parse_args(args)
 
     self.directory = self.args.directory
     self.verbose = self.args.verbose
