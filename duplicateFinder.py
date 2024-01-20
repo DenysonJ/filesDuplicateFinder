@@ -116,10 +116,12 @@ class DuplicateFinder:
 
     allFiles = files.get_files(self.directory) if not self.recursive else files.get_recursive_files(self.directory)
 
-    allFiles = filter(lambda x: x.split('.')[-1] not in self.exclude, allFiles)
+    excluded = self.exclude
+    allFiles = filter(lambda x: os.path.splitext(x)[1] not in excluded, allFiles)
 
     if self.include:
-      allFiles = filter(lambda x: x.split('.')[-1] in self.include, allFiles)
+      included = self.include
+      allFiles = filter(lambda x: os.path.splitext(x)[1] in included, allFiles)
 
     return list(allFiles)
 
@@ -154,12 +156,6 @@ class DuplicateFinder:
     if extension1 == extension2:
       return True
 
-    if extension1 in self.videoExtensions and extension2 in self.imageExtensions:
-      return False
-
-    if extension1 in self.imageExtensions and extension2 in self.videoExtensions:
-      return False
-
     if extension1 in self.videoExtensions and extension2 in self.videoExtensions:
       return True
 
@@ -182,8 +178,8 @@ class DuplicateFinder:
     if self.verbose > 0:
       print(f"Comparing {file1} and {file2} using hard comparison")
 
-    file1Extension = os.path.splitext(file1)[1]
-    file2Extension = os.path.splitext(file2)[1]
+    file1Extension = os.path.splitext(file1)[1].replace('.', '')
+    file2Extension = os.path.splitext(file2)[1].replace('.', '')
 
     if not self.type_check(file1Extension, file2Extension):
       return validate_file_contents(file1, file2)
