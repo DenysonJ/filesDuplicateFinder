@@ -245,11 +245,11 @@ class DuplicateFinder:
             allFiles[j]
           ):
           if allFiles[i] not in self.get_all_duplicates():
-            self.duplicates[allFiles[i]] = [allFiles[j]]
+            self.duplicates[allFiles[i]] = set([allFiles[j]])
             self.countDuplicates += 1
             continue
           if allFiles[j] not in self.get_all_duplicates():
-            self.duplicates[allFiles[i]].append(allFiles[j])
+            self.duplicates[allFiles[i]].add(allFiles[j])
             self.countDuplicates += 1
 
   def get_all_duplicates(self) -> set[str]:
@@ -281,7 +281,7 @@ class DuplicateFinder:
     Returns:
       list[str]: The ordered list of files.
     """
-    dic = { func(file): file for file in list }.items()
+    dic = [(func(file), file) for file in list]
     sort_list = sorted(dic, key=lambda x: x[0], reverse=reverse)
 
     return [file[1] for file in sort_list]
@@ -305,10 +305,10 @@ class DuplicateFinder:
     if fileExtension in self.imageExtensions:
       return self.order_by_info(list, files.get_pixels, reverse)
 
-    raise NotImplementedError(f"ERROR: Ordering by best quality is not\
-      implemented for {fileExtension} files.")
+    raise NotImplementedError(f"ERROR: Ordering by best quality is not" \
+      " implemented for {} files.".format(fileExtension))
 
-  def choose_duplicate(self) -> dict[str, list[str]]:
+  def choose_duplicate(self) -> dict[str, set[str]]:
     """
     Choose which duplicate file to keep.
 
@@ -328,14 +328,14 @@ class DuplicateFinder:
 
     for file in self.duplicates:
       list = choice([*self.duplicates[file], file])
-      duplicates[list[0]] = list[1:]
+      duplicates[list[0]] = set(list[1:])
 
     if self.verbose > 0:
       print(duplicates)
 
     return duplicates
 
-  def delete_duplicates(self, dic: dict[str, list[str]]) -> None:
+  def delete_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
     Delete duplicate files.
     """
@@ -351,7 +351,7 @@ class DuplicateFinder:
         if read.lower() == 'y':
           os.remove(duplicate)
 
-  def move_duplicates(self, dic: dict[str, list[str]]) -> None:
+  def move_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
     Move duplicate files.
     """
@@ -361,7 +361,7 @@ class DuplicateFinder:
         fileName = os.path.basename(duplicate)
         os.rename(duplicate, os.path.join(self.output, fileName))
 
-  def link_duplicates(self, dic: dict[str, list[str]]) -> None:
+  def link_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
     Create soft links for duplicate files.
     """
@@ -371,7 +371,7 @@ class DuplicateFinder:
         fileName = os.path.basename(duplicate)
         os.symlink(os.path.abspath(duplicate), os.path.join(self.output, fileName))
 
-  def action_on_duplicates(self, dic: dict[str, list[str]]) -> None:
+  def action_on_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
     Perform the action on duplicate files.
     """
