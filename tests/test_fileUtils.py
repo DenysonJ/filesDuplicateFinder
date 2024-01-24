@@ -9,11 +9,6 @@ class TestFileUtils(unittest.TestCase):
     self.assertEqual(files.return_file_size('fixtures/test2.txt'), 13)
     self.assertEqual(files.return_file_size('fixtures/test3.txt'), 12)
 
-  def test_get_file_create_time(self):
-    self.assertEqual(files.return_file_create_time('fixtures/test1.txt'), 1704582745.2046244)
-    self.assertEqual(files.return_file_create_time('fixtures/test2.txt'), 1704582745.2126243)
-    self.assertEqual(files.return_file_create_time('fixtures/sample_960x400_ocean_with_audio.mov'), 1704582745.0025537)
-
   def test_get_files(self):
     allFiles = files.get_files('fixtures')
     fixtures = ['fixtures/test1.txt', 

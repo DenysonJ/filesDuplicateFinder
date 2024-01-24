@@ -1,4 +1,5 @@
 import os
+import platform
 
 
 def get_recursive_files(directory: str) -> list[str]:
@@ -43,10 +44,18 @@ def return_file_create_time(file: str) -> float:
       file (str): Path to the file.
 
   Returns:
-      float: Creation time of the file.
+      float: Creation time of the file, if available.
   """
-  # works on Windows only?
-  return os.path.getctime(file)
+  system = platform.system()
+
+  if system == 'Windows':
+    return os.path.getctime(file)
+
+  try:
+    return os.stat(file).st_birthtime
+
+  except AttributeError:
+    return os.stat(file).st_mtime
 
 def return_file_size(file: str) -> int:
   """
@@ -95,7 +104,7 @@ def get_pixels(image: str) -> int:
   Get the number of pixels in the resolution.
 
   Args:
-      resolution (tuple[int, int]): Resolution of the image.
+      image (str): Path to the image.
 
   Returns:
       int: Number of pixels in the resolution.
@@ -108,8 +117,7 @@ def get_video_pixels(video: str) -> float:
   Get the number of pixels in the video.
 
   Args:
-      resolution (tuple[int, int]): Resolution of the video.
-      fps (float): Frames per second of the video.
+      video (str): Path to the video.
 
   Returns:
       float: Number of pixels in the video.
