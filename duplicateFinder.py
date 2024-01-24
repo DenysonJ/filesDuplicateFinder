@@ -26,17 +26,20 @@ def parser() -> ArgumentParser:
       '-v', '--verbose', help='Print verbose output', action='count', default=0)
   parser.add_argument(
       '-s', '--similarity', help='Set the similarity threshold', default=0.85, type=float)
-  parser.add_argument('-t', '--type', help='Set the type of comparison to use',
-                      choices=['soft', 'hard'], default='hard', type=str)
+  parser.add_argument(
+      '-t', '--type', help='Set the type of comparison to use',
+      choices=['soft', 'hard'], default='hard', type=str)
   parser.add_argument(
       '-r', '--recursive', help='Recursively search the directory', action='store_true')
-  parser.add_argument('-a', '--action', help='Action to take on duplicate files',
-                      choices=['delete', 'move', 'link'], default='delete', type=str)
+  parser.add_argument(
+      '-a', '--action', help='Action to take on duplicate files',
+      choices=['delete', 'move', 'link'], default='delete', type=str)
   parser.add_argument(
       '-b', '--bulk', help='Confirm delete on all duplicate files, otherwise confirm each file',
       action='store_true')
   parser.add_argument(
-      '-o', '--output', help='Output directory to write duplicate files', default='duplicated', type=str)
+      '-o', '--output', help='Output directory to write duplicate files',
+      default='duplicated', type=str)
 
   parser.add_argument(
       '-f', '--fileChoice', help='Choose which file to keep', 
@@ -118,12 +121,10 @@ class DuplicateFinder:
 
     allFiles = files.get_files(self.directory) if not self.recursive else files.get_recursive_files(self.directory)
 
-    excluded = self.exclude
-    allFiles = filter(lambda x: os.path.splitext(x)[1] not in excluded, allFiles)
+    allFiles = filter(lambda x: os.path.splitext(x)[1] not in self.exclude, allFiles)
 
     if self.include:
-      included = self.include
-      allFiles = filter(lambda x: os.path.splitext(x)[1] in included, allFiles)
+      allFiles = filter(lambda x: os.path.splitext(x)[1] in self.include, allFiles)
 
     return list(allFiles)
 
