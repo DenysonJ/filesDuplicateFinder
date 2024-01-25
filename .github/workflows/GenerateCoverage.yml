@@ -18,11 +18,18 @@ jobs:
           auto-activate-base: false
           auto-update-conda: true
       
-      - name: Install coverage
-        run: conda install -c conda-forge coverage
+      - name: Print Environment - Debugging
+        run: |
+          conda activate pythonUtils
+          conda list
+
+      - name: Print PATH - Debugging
+        run: echo $PATH
 
       - name: Run tests coverage
-        run: make generate_coverage
+        run: |
+          coverage run -m unittest discover . -b
+          coverage report -m ./*/*.py ./*.py
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
