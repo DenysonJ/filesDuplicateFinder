@@ -24,7 +24,7 @@ jobs:
       - name: Run tests coverage
         run: |
           coverage run -m unittest discover . -b
-          coverage report -m ./*/*.py ./*.py
+          coverage xml -m ./*/*.py ./*.py 
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
