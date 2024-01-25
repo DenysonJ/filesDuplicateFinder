@@ -63,7 +63,7 @@ class TestDuplicate(unittest.TestCase):
       'fixtures/images_sizes/sample-images-05.jpeg']))
 
   def test_search_duplicates_hard(self) -> None:
-    duplicateFinder = DuplicateFinder(['-d', 'fixtures'])
+    duplicateFinder = DuplicateFinder(['-d', 'fixtures', '-v'])
     duplicateFinder.search()
 
     duplicated = duplicateFinder.duplicates

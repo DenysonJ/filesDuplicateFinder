@@ -245,6 +245,9 @@ class DuplicateFinder:
             allFiles[i],
             allFiles[j]
           ):
+          if self.verbose > 0:
+            print(f"{allFiles[i]} and {allFiles[j]} are duplicates")
+            print(f"Actual duplicates: {self.get_all_duplicates()}")
           if allFiles[i] not in self.get_all_duplicates():
             self.duplicates[allFiles[i]] = set([allFiles[j]])
             self.countDuplicates += 1

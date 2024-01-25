@@ -20,14 +20,6 @@ jobs:
           environment-file: env.yml
           auto-activate-base: false
           auto-update-conda: true
-      
-      - name: Print Environment - Debugging
-        run: |
-          conda activate pythonUtils
-          conda list
-
-      - name: Print PATH - Debugging
-        run: echo $PATH
 
       - name: Run tests coverage
         run: |
