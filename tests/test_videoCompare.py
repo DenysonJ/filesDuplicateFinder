@@ -55,3 +55,11 @@ class TestVideoCompare(unittest.TestCase):
     self.similar.compare_videos_soft()
     output = sys.stdout.getvalue().strip()
     self.assertEqual(output, message)
+
+  def test_video_compare_soft_scale(self):
+    result = self.equal.compare_videos_soft(scale=2)
+    self.assertTrue(result[0])
+    self.assertEqual(result[1], 1.0)
+
+  def test_video_compare_soft_scale_raise(self):
+    self.assertRaises(ValueError, self.equal.compare_videos_soft, scale=20)
