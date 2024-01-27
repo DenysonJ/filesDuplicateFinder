@@ -4,8 +4,6 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/DenysonJ/filesDuplicateFinder)
 ![GitHub language count](https://img.shields.io/github/languages/count/DenysonJ/filesDuplicateFinder)
 ![GitHub forks](https://img.shields.io/github/forks/DenysonJ/filesDuplicateFinder)
-![Bitbucket open issues](https://img.shields.io/bitbucket/issues/DenysonJ/filesDuplicateFinder)
-![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr-raw/DenysonJ/filesDuplicateFinder)
 
 <img src="imagem.png" alt="Exemplo imagem">
 

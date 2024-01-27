@@ -4,7 +4,6 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/DenysonJ/filesDuplicateFinder)
 ![GitHub forks](https://img.shields.io/github/forks/DenysonJ/filesDuplicateFinder)
 ![GitHub open issues](https://img.shields.io/github/issues/DenysonJ/filesDuplicateFinder)
-![GitHub open pull requests](https://img.shields.io/github/pr-raw/DenysonJ/filesDuplicateFinder)
 
 
 O objetivo desse projeto é desenvolver um programa chamado "filesDuplicateFinder" que permite encontrar e gerenciar arquivos duplicados em diretório, de forma a economizar espaço. O projeto está em desenvolvimento e possui uma lista de tarefas a serem concluídas.
