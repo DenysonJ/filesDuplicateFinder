@@ -1,0 +1,46 @@
+name: Generate Coverage
+
+on:
+  pull_request:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      - main
+      - develop
+      - 'releases/**'
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      - main
+      - develop
+      - 'releases/**'
+    tags:
+      - 'v*'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: pythonUtils
+          environment-file: env.yml
+          auto-activate-base: false
+          auto-update-conda: true
+
+      - name: Run tests coverage
+        run: |
+          coverage run -m unittest discover . -b
+          coverage xml ./*/*.py ./*.py 
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -24,7 +24,7 @@ class TestDuplicate(unittest.TestCase):
       fileExtension = os.path.splitext(file)[1]
       self.assertEqual(fileExtension, '.mp4')
 
-    self.assertEqual(allFiles, ['fixtures/sample_640x360.mp4', 'fixtures/sample_960x540.mp4'])
+    self.assertEqual(set(allFiles), set(['fixtures/sample_640x360.mp4', 'fixtures/sample_960x540.mp4']))
 
   def test_get_all_files_exclude(self) -> None:
     duplicateFinder = DuplicateFinder(['-d', 'fixtures', '-e', '.mp4'])
@@ -65,13 +65,13 @@ class TestDuplicate(unittest.TestCase):
   def test_search_duplicates_hard(self) -> None:
     duplicateFinder = DuplicateFinder(['-d', 'fixtures'])
     duplicateFinder.search()
+    
+    duplicatedSet = duplicateFinder.get_all_duplicates()
 
-    duplicated = duplicateFinder.duplicates
-
-    self.assertEqual(duplicated, {
-      'fixtures/copy_sample.bmp': set(['fixtures/sample_640x426.bmp']),
-      'fixtures/test1.txt': set(['fixtures/test2.txt'])
-    })
+    self.assertEqual(duplicatedSet, set(['fixtures/copy_sample.bmp', 
+                                      'fixtures/sample_640x426.bmp',
+                                      'fixtures/test1.txt',
+                                      'fixtures/test2.txt']))
 
   def test_search_duplicates_soft_best(self) -> None:
     duplicateFinder = DuplicateFinder(['-d', 'fixtures', '-t', 'soft', '-f', 'best'])
