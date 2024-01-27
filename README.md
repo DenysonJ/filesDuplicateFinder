@@ -1,6 +1,6 @@
 # filesDuplicateFinder
 
-![Codecov](https://img.shields.io/codecov/c/github/DenysonJ/filesDuplicateFinder)
+[![Codecov](https://codecov.io/gh/DenysonJ/filesDuplicateFinder/graph/badge.svg?token=2771FCYD4R)](https://codecov.io/gh/DenysonJ/filesDuplicateFinder)
 ![GitHub repo size](https://img.shields.io/github/repo-size/DenysonJ/filesDuplicateFinder)
 ![GitHub forks](https://img.shields.io/github/forks/DenysonJ/filesDuplicateFinder)
 ![GitHub open issues](https://img.shields.io/github/issues/DenysonJ/filesDuplicateFinder)
@@ -28,7 +28,11 @@ If you don't speak portuguese, open this [translated readme](README-en.md).
 
 O projeto ainda está em desenvolvimento e as próximas atualizações serão voltadas nas seguintes tarefas:
 
-- [ ] Criar testes para as principais funções
+- [X] Criar testes para as principais funções
+- [ ] Criar flexibilidade para comparação soft em vídeos 
+- [ ] Criar sistema de log
+- [ ] Melhorar performance
+- [ ] Aumentar cobertura de testes para casos de uso
 - [ ] Criar uma Interface Gráfica
 - [ ] Criar um instalador
 - [ ] Compatibilidade com Windows (não testado ainda)
