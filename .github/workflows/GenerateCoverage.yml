@@ -1,6 +1,20 @@
 name: Generate Coverage
 
-on: [push]
+on:
+  pull_request:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      - main
+      - develop
+      - 'releases/**'
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      - main
+      - develop
+      - 'releases/**'
+  tags:
+    - 'v*'
 
 jobs:
   tests:
