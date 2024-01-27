@@ -13,8 +13,8 @@ on:
       - main
       - develop
       - 'releases/**'
-  tags:
-    - 'v*'
+    tags:
+      - 'v*'
 
 jobs:
   tests:
