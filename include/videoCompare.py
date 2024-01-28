@@ -80,7 +80,7 @@ class VideoCompare:
     # If all frames are equal, return True
     return True
 
-  def compare_videos_soft(self, scale: int = 1) -> tuple[bool, float]:
+  def compare_videos_soft(self, scale: float = 1) -> tuple[bool, float]:
     """
     Compares the two videos with a similarity threshold.
 
