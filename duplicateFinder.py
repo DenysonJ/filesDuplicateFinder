@@ -30,6 +30,8 @@ def parser() -> ArgumentParser:
       '-t', '--type', help='Set the type of comparison to use',
       choices=['soft', 'hard'], default='hard', type=str)
   parser.add_argument(
+      '--scale', help='Factor to compare frames in video comparison', default=1, type=float)
+  parser.add_argument(
       '-r', '--recursive', help='Recursively search the directory', action='store_true')
   parser.add_argument(
       '-a', '--action', help='Action to take on duplicate files',
@@ -61,25 +63,8 @@ class DuplicateFinder:
   """
   Class to find duplicate files in a given directory.
 
-  Attributes:
-      directory (str): The directory to search for duplicate files.
-      verbose (int): The level of verbosity for output.
-      bulk (bool): Flag to indicate whether to confirm action on all duplicate files.
-      similarity (float): The similarity threshold for file comparison.
-      type (str): The type of comparison to use ('soft' or 'hard').
-      recursive (bool): Flag to indicate whether to search the directory recursively.
-      exclude (list[str]): List of file types to exclude from comparison.
-      include (list[str]): List of file types to include in comparison.
-      action (str): The action to take on duplicate files 
-          ('delete', 
-          'move', 
-          or 'link').
-      output (str): The output file to write duplicate files.
-      fileChoice (str): How to choose a file to keep when there are duplicates
-      duplicates (dict): Dictionary to store duplicate files.
-
   Methods:
-      main(): Search for all duplicated an perform the choosed action over them
+      main(): Search for all duplicated and perform the choosed action over them
       search(): Get all duplicated files in the given directory with the given option
       get_all_files(): Get all files in the directory with the given option.
       compare_files(file1: str, file2: str) -> bool: Compare two files.
@@ -87,6 +72,8 @@ class DuplicateFinder:
           using hard comparison.
       compare_files_soft(file1: str, file2: str) -> bool: Compare two files \
           using soft comparison.
+      print_duplicates(): Print the duplicate files.
+      get_all_duplicates() -> list[str]: Get all duplicate files.
   """
 
   videoExtensions = {'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm'}
@@ -106,6 +93,7 @@ class DuplicateFinder:
     self.action = self.args.action
     self.output = self.args.output
     self.fileChoice = self.args.fileChoice
+    self.scale = self.args.scale
 
     self.duplicates = {}
     self.countDuplicates = 0
@@ -219,7 +207,7 @@ class DuplicateFinder:
 
     if file1.split('.')[-1] in self.videoExtensions:
       result = VideoCompare(file1, file2, verbose=self.verbose, 
-                            similarity=self.similarity).compare_videos_soft()
+                            similarity=self.similarity).compare_videos_soft(self.scale)
       if self.verbose > 0:
         print(f"Video similarity: {result[1]}")
       return result[0]
