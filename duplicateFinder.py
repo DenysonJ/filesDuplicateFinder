@@ -2,7 +2,7 @@ import os
 from argparse import ArgumentParser
 from typing import Callable, Any, Sequence
 
-from include.videoCompare import VideoCompare
+from include.videoCompare import FrameError, VideoCompare
 from include.imageCompare import ImageCompare
 from include.fileByteCompare import validate_file_contents
 import include.files as files
@@ -206,15 +206,35 @@ class DuplicateFinder:
       return False
 
     if file1.split('.')[-1] in self.videoExtensions:
-      result = VideoCompare(file1, file2, verbose=self.verbose, 
+      try:
+        result = VideoCompare(file1, file2, verbose=self.verbose, 
                             similarity=self.similarity).compare_videos_soft(self.scale)
+      except ValueError as e:
+        print('ERROR: {} value is to small or to big'.format(self.scale))
+        print(getattr(e, 'message', repr(e)))
+        return False
+      except FrameError as e:
+        print('ERROR: error reading frames of the video {} or {}'.format(file1, file2))
+        print(getattr(e, 'message', repr(e)))
+        return False
+      except Exception as e:
+        print('ERROR: error comparing videos {} and {}'.format(file1, file2))
+        print(getattr(e, 'message', repr(e)))
+        return False
+
       if self.verbose > 0:
         print(f"Video similarity: {result[1]}")
       return result[0]
 
     if file1.split('.')[-1] in self.imageExtensions:
-      result = ImageCompare(file1, file2, verbose=self.verbose, 
+      try:
+        result = ImageCompare(file1, file2, verbose=self.verbose, 
                             similarity=self.similarity).image_similarity()
+      except Exception as e:
+        print('ERROR: error comparing images {} and {}'.format(file1, file2))
+        print(getattr(e, 'message', repr(e)))
+        return False
+
       if self.verbose > 0:
         print(f"Image similarity: {result[1]}")
       return result[0]
