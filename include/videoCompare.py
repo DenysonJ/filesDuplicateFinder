@@ -111,6 +111,9 @@ class VideoCompare:
     if scale * fps1 > video1_frames:
       raise ValueError("Scale is too large for the video")
 
+    if scale * fps1 < 1:
+      raise ValueError("Scale is too small for the video")
+
     scores = []
 
     # Loop through each first frame of scale of fps and compare them
