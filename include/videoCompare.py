@@ -21,6 +21,8 @@ class VideoCompare:
     verbose (int, optional): Verbosity level. Defaults to 0.
     similarity (float, optional): Similarity threshold for considering frames 
       as equal. Defaults to 0.85.
+    timeThreshold (float, optional): Time threshold for considering videos as
+      equal in length. Defaults to 1. Length is in seconds.
 
   Attributes:
     base_video (str): Path to the base video file.
@@ -37,12 +39,13 @@ class VideoCompare:
   """
 
   def __init__(
-    self, base_video: str, compare_video: str, verbose: int=0, similarity: float=0.85) -> None:
+    self, base_video: str, compare_video: str, verbose: int=0, similarity: float=0.85, timeThreshold: float=1) -> None:
 
     self.base_video = base_video
     self.compare_video = compare_video
     self.verbose = verbose
     self.similarity = similarity
+    self.timeThreshold = timeThreshold
 
     # Read in the videos
     self.video1 = cv.VideoCapture(self.base_video)
@@ -80,7 +83,7 @@ class VideoCompare:
     # If all frames are equal, return True
     return True
 
-  def compare_videos_soft(self, scale: float = 1) -> tuple[bool, float]:
+  def compare_videos_soft(self, scale: float=1) -> tuple[bool, float]:
     """
     Compares the two videos with a similarity threshold.
 
@@ -101,7 +104,8 @@ class VideoCompare:
     video2_length = video2_frames / fps2
 
     # If the videos have different lengths, return False
-    if video1_length != video2_length:
+    if (video1_length >= video2_length + self.timeThreshold or
+      video1_length <= video2_length - self.timeThreshold):
       if self.verbose > 0:
         print("Videos have different lengths")
         print("Video 1: {:.4f} seconds".format(video1_length))
@@ -115,9 +119,10 @@ class VideoCompare:
       raise ValueError("Scale is too small for the video")
 
     scores = []
+    steps = int(fps1 * scale)
 
     # Loop through each first frame of scale of fps and compare them
-    for i in range(0, video1_frames, fps1 * scale):
+    for i in range(0, video1_frames, steps):
       # Set the frame position of each video
       self.video1.set(cv.CAP_PROP_POS_FRAMES, i)
       self.video2.set(cv.CAP_PROP_POS_FRAMES, i)
@@ -128,6 +133,14 @@ class VideoCompare:
 
       # If either frame is not read correctly, return False
       if not ret1 or not ret2:
+        # TODO Log the error if the verbose level is high enough
+        # If previous frames were read correctly, return the average score
+        # > 1 because it assumes that the first frame is not enough to comparison
+        if len(scores) > 1:
+          result = np.mean(scores)
+          if self.verbose > 0:
+            print("Video similarity (SSIM): {:.4f}".format(result))
+          return result >= self.similarity, result
         raise FrameError("Error reading frames. Frame count: {}".format(i))
 
       # Compare the frames
