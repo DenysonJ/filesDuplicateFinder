@@ -29,9 +29,9 @@ Se você não fala inglês, abra este [readme em pt-br](README.md).
 The project is still under development and the next updates will focus on the following tasks:
 
 - [X] Create tests for the main functions
-- [ ] Create flexibility for soft comparison on videos
-- [ ] Create log system
-- [ ] Improve performance
+- [X] Create flexibility for soft comparison on videos
+- [ ] Create log system -> In development
+- [ ] Improve performance -> In development
 - [ ] Improve use test case coverage
 - [ ] Create a GUI
 - [ ] Create a installer
@@ -39,6 +39,7 @@ The project is still under development and the next updates will focus on the fo
 - [ ] Compatibility with macOS (not tested yet)
 - [ ] Compatibility with Linux
 - [ ] Create text similarity function
+- [ ] Create PDF similarity function
 
 ## 💻 Prerequisites
 
