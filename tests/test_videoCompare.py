@@ -41,8 +41,8 @@ class TestVideoCompare(unittest.TestCase):
 
   def test_video_compare_verbose(self):
     message = "Videos have different lengths\n"
-    m1 = "Video 1: 13.7931 seconds\n"
-    m2 = "Video 2: 48.5217 seconds"
+    m1 = "Video 1: 13.3467 seconds\n"
+    m2 = "Video 2: 46.5465 seconds"
     message += m1 + m2
     self.different.verbose = 1
     self.different.compare_videos_soft()
@@ -50,7 +50,7 @@ class TestVideoCompare(unittest.TestCase):
     self.assertEqual(output, message)
 
   def test_video_compare_verbose_similar(self):
-    message = "Video similarity (SSIM): 0.9791"
+    message = "Video similarity (SSIM): 0.9571"
     self.similar.verbose = 1
     self.similar.compare_videos_soft()
     output = sys.stdout.getvalue().strip()

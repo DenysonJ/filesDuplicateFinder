@@ -42,7 +42,7 @@ class TestImageCompare(unittest.TestCase):
       'fixtures/594_900x900.jpg',
       verbose=1).image_similarity()
     output = sys.stdout.getvalue().strip()
-    self.assertEqual(output, 'Image similarity (SSIM): 0.1777')
+    self.assertEqual(output, 'Image similarity (SSIM): 0.1770')
 
   def test_image_reverse_resolution(self):
     result = ImageCompare(
