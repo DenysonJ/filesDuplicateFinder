@@ -15,7 +15,8 @@ def parser() -> ArgumentParser:
   """
   Parse command line arguments.
 
-  Returns:
+  Returns
+  ----------
       ArgumentParser: The argument parser object.
   """
   parser = ArgumentParser(
@@ -64,9 +65,10 @@ def parser() -> ArgumentParser:
 
 class DuplicateFinder:
   """
-  Class to find duplicate files in a given directory.
+  ### Class to find duplicate files in a given directory.
 
-  Methods:
+  Methods
+  ----------
       main(): Search for all duplicated and perform the choosed action over them
       search(): Get all duplicated files in the given directory with the given option
       get_all_files(): Get all files in the directory with the given option.
@@ -109,9 +111,10 @@ class DuplicateFinder:
 
   def get_all_files(self) -> list[str]:
     """
-    Get all files in the directory.
+    ### Get all files in the directory.
 
-    Returns:
+    Returns
+    ----------
         list[str]: List of file paths.
     """
     allFiles = []
@@ -127,13 +130,15 @@ class DuplicateFinder:
 
   def compare_files(self, file1: str, file2: str) -> bool:
     """
-    Compare two files.
+    ### Compare two files.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.type == 'soft':
@@ -143,13 +148,15 @@ class DuplicateFinder:
 
   def type_check(self, extension1: str, extension2: str) -> bool:
     """
-    Check if the file types are the same.
+    ### Check if the file types are the same.
 
-    Args:
+    Parameters
+    ----------
         extension1 (str): Extension of the first file.
         extension2 (str): Extension of the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the file types are the same, False otherwise.
     """
 
@@ -166,13 +173,15 @@ class DuplicateFinder:
 
   def compare_files_hard(self, file1: str, file2: str) -> bool:
     """
-    Compare two files using hard comparison.
+    ### Compare two files using hard comparison.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.verbose > 0:
@@ -198,13 +207,15 @@ class DuplicateFinder:
 
   def compare_files_soft(self, file1: str, file2: str) -> bool:
     """
-    Compare two files using soft comparison.
+    ### Compare two files using soft comparison.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.verbose > 0:
@@ -264,7 +275,7 @@ class DuplicateFinder:
     
   def search(self) -> None:
     """
-    Search the directory for duplicate files.
+    ### Search the directory for duplicate files.
     """
     allFiles = self.get_all_files()
     for i in range(len(allFiles)):
@@ -292,9 +303,10 @@ class DuplicateFinder:
 
   def get_all_duplicates(self) -> set[str]:
     """
-    Get all duplicate files.
+    ### Get all duplicate files.
 
-    Returns:
+    Returns
+    ----------
         list[str]: List of duplicate files.
     """
     if len(self.duplicates) == 0:
@@ -307,16 +319,18 @@ class DuplicateFinder:
 
   def order_by_info(self, list: list[str], func: Callable[[str], Any], reverse: bool) -> list[str]:
     """
-    Orders the given list of files based on the information returned by the provided function.
+    ### Orders the given list of files based on the information returned by the provided function.
 
-    Args:
+    Parameters
+    ----------
       list (list[str]): The list of files to be ordered.
       func (Callable[[str], Any]): A function that takes a file path as input and
         returns the information used for ordering.
       reverse (bool): If True, the list will be ordered in reverse (descending)
         order. If False, the list will be ordered in ascending order.
 
-    Returns:
+    Returns
+    ----------
       list[str]: The ordered list of files.
     """
     dic = [(func(file), file) for file in list]
@@ -326,13 +340,16 @@ class DuplicateFinder:
 
   def order_by_best_quality(self, list: list[str], reverse: bool) -> list[str]:
     """
-    Orders the given list of files based on the quality of the file.
-    Args:
+    ### Orders the given list of files based on the quality of the file.
+
+    Parameters
+    ----------
         list (list[str]): The list of files to be ordered.
         reverse (bool): If True, the list will be ordered in reverse (descending)
         order. If False, the list will be ordered in ascending order.
 
-    Returns:
+    Returns
+    ----------
         list[str]: The ordered list of files.
     """
     fileExtension = os.path.splitext(list[0])[1]
@@ -347,9 +364,10 @@ class DuplicateFinder:
 
   def choose_duplicate(self) -> dict[str, set[str]]:
     """
-    Choose which duplicate file to keep.
+    ### Choose which duplicate file to keep.
 
-    Returns: 
+    Returns
+    ---------- 
       dict[str, list[str]]: A dictionary containing the file to keep as the key
         and the files to delete/move/link as the values.
     """
@@ -374,7 +392,7 @@ class DuplicateFinder:
 
   def delete_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Delete duplicate files.
+    ### Delete duplicate files.
     """
     if self.bulk:
       for file in dic:
@@ -405,7 +423,7 @@ class DuplicateFinder:
 
   def move_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Move duplicate files.
+    ### Move duplicate files.
     """
     os.makedirs(self.output, exist_ok=True)
     for file in dic:
@@ -419,7 +437,7 @@ class DuplicateFinder:
 
   def link_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Create soft links for duplicate files.
+    ### Create soft links for duplicate files.
     """
     os.makedirs(self.output, exist_ok=True)
     for file in dic:
@@ -433,7 +451,7 @@ class DuplicateFinder:
 
   def action_on_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Perform the action on duplicate files.
+    ### Perform the action on duplicate files.
     """
     {
       'delete': self.delete_duplicates,
@@ -443,7 +461,7 @@ class DuplicateFinder:
   
   def print_duplicates(self) -> None:
     """
-    Print the duplicate files.
+    ### Print the duplicate files.
     """
     for file in self.duplicates:
       print(file)
@@ -452,7 +470,7 @@ class DuplicateFinder:
 
   def main(self) -> None:
     """
-    Main function.
+    ### Main function.
     """
     self.search()
     if self.bulk and self.action == 'delete':
