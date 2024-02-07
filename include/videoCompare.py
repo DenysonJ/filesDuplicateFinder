@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import logging
 
 from include.imageCompare import ImageCompare
 
@@ -83,9 +84,14 @@ class VideoCompare:
     # If all frames are equal, return True
     return True
 
-  def compare_videos_soft(self, scale: float=1) -> tuple[bool, float]:
+  def compare_videos_soft(self, scale: int=1) -> tuple[bool, float]:
     """
     Compares the two videos with a similarity threshold.
+
+    Args:
+      scale (int, optional): The scale of the frames to compare. Defaults to 1.
+      This is used to skip x frames when comparing the videos, where x will be 
+      equal to scale * fps.
 
     Returns:
       tuple[bool, float]: A tuple containing a boolean indicating if the videos
@@ -96,8 +102,8 @@ class VideoCompare:
     video2_frames = int(self.video2.get(cv.CAP_PROP_FRAME_COUNT))
 
     # Get the frame rate of each video
-    fps1 = int(self.video1.get(cv.CAP_PROP_FPS))
-    fps2 = int(self.video2.get(cv.CAP_PROP_FPS))
+    fps1 = self.video1.get(cv.CAP_PROP_FPS)
+    fps2 = self.video2.get(cv.CAP_PROP_FPS)
 
     # Calculate the length of each video
     video1_length = video1_frames / fps1
@@ -110,22 +116,29 @@ class VideoCompare:
         print("Videos have different lengths")
         print("Video 1: {:.4f} seconds".format(video1_length))
         print("Video 2: {:.4f} seconds".format(video2_length))
+      logging.info(f"Videos have different lengths => Video 1: {video1_length}\
+        seconds vs Video 2: {video2_length}")
       return False, 0
 
-    if scale * fps1 > video1_frames:
+    if scale * fps1 > video1_frames or scale * fps2 > video2_frames:
       raise ValueError("Scale is too large for the video")
 
-    if scale * fps1 < 1:
+    if scale * fps1 < 1 or scale * fps2 < 1:
       raise ValueError("Scale is too small for the video")
 
     scores = []
-    steps = int(fps1 * scale)
 
     # Loop through each first frame of scale of fps and compare them
-    for i in range(0, video1_frames, steps):
+    for i in range(0, min(video1_frames, video2_frames), int(scale)):
+      f1 = i * fps1
+      f2 = i * fps2
+      
+      if f1 >= video1_frames or f2 >= video2_frames:
+        break
+      
       # Set the frame position of each video
-      self.video1.set(cv.CAP_PROP_POS_FRAMES, i)
-      self.video2.set(cv.CAP_PROP_POS_FRAMES, i)
+      self.video1.set(cv.CAP_PROP_POS_FRAMES, int(f1))
+      self.video2.set(cv.CAP_PROP_POS_FRAMES, int(f2))
 
       # Read in the frames
       ret1, frame1 = self.video1.read()
@@ -133,26 +146,29 @@ class VideoCompare:
 
       # If either frame is not read correctly, return False
       if not ret1 or not ret2:
-        # TODO Log the error if the verbose level is high enough
+        logging.warning(f"Error reading frames. Frame count: {f1} and {f2}")
+        logging.warning(f"File 1: {self.base_video} File 2: {self.compare_video}")
         # If previous frames were read correctly, return the average score
         # > 1 because it assumes that the first frame is not enough to comparison
         if len(scores) > 1:
-          result = np.mean(scores)
-          if self.verbose > 0:
-            print("Video similarity (SSIM): {:.4f}".format(result))
-          return result >= self.similarity, result
-        raise FrameError("Error reading frames. Frame count: {}".format(i))
+          break
+          # result = np.mean(scores)
+          # if self.verbose > 0:
+          #   print("Video similarity (SSIM): {:.4f}".format(result))
+          # return result >= self.similarity, result
+        raise FrameError("Error reading frames. Frame count: {f1} and {f2}".format(f1, f2))
 
       # Compare the frames
       cmp = ImageCompare(frame1, frame2, self.verbose - 1, False)
       score = cmp.image_similarity()
 
-      scores.append(score)
+      scores.append(score[1])
 
     result = np.mean(scores)
 
     if self.verbose > 0:
       print("Video similarity (SSIM): {:.4f}".format(result))
+    logging.info(f"Video similarity (SSIM): {result}")
 
     # If all frames are similar, return True
     return result >= self.similarity, result 
