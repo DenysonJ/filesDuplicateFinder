@@ -1,4 +1,7 @@
 import os
+import logging
+import time
+
 from argparse import ArgumentParser
 from typing import Callable, Any, Sequence
 
@@ -12,13 +15,14 @@ def parser() -> ArgumentParser:
   """
   Parse command line arguments.
 
-  Returns:
+  Returns
+  ----------
       ArgumentParser: The argument parser object.
   """
   parser = ArgumentParser(
       description='Find duplicate files in the given directory.')
   parser.add_argument('--version', action='version',
-                      version='%(prog)s 1.0.0')
+                      version='%(prog)s 1.1.0')
 
   parser.add_argument(
       '-d', '--directory', help='Find duplicates on this directory', default='.', type=str)
@@ -30,7 +34,7 @@ def parser() -> ArgumentParser:
       '-t', '--type', help='Set the type of comparison to use',
       choices=['soft', 'hard'], default='hard', type=str)
   parser.add_argument(
-      '--scale', help='Factor to compare frames in video comparison', default=1, type=float)
+      '--scale', help='Factor to compare frames in video comparison', default=1, type=int)
   parser.add_argument(
       '-r', '--recursive', help='Recursively search the directory', action='store_true')
   parser.add_argument(
@@ -61,9 +65,10 @@ def parser() -> ArgumentParser:
 
 class DuplicateFinder:
   """
-  Class to find duplicate files in a given directory.
+  ### Class to find duplicate files in a given directory.
 
-  Methods:
+  Methods
+  ----------
       main(): Search for all duplicated and perform the choosed action over them
       search(): Get all duplicated files in the given directory with the given option
       get_all_files(): Get all files in the directory with the given option.
@@ -76,10 +81,16 @@ class DuplicateFinder:
       get_all_duplicates() -> list[str]: Get all duplicate files.
   """
 
-  videoExtensions = {'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm'}
-  imageExtensions = {'jpg', 'jpeg', 'png', 'bmp', 'gif', 'tiff', 'tif'}
+  videoExtensions = {'.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v'}
+  imageExtensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif'}
 
-  def __init__(self, args: Sequence[str] | None = None) -> None:
+  def __init__(self, args: Sequence[str] | None = None, logLevel: int = logging.WARNING) -> None:
+    if not os.path.exists("logs/"):
+      os.makedirs("logs/")
+    logFileName = 'logs/duplicateFinder-' + time.strftime("%Y%m%d") + '.log'
+    formatLog = '%(asctime)s - %(name)s - %(levelname)s: %(message)s'
+    logging.basicConfig(filename=logFileName, format=formatLog, level=logLevel)
+
     self.args = parser().parse_args(args)
 
     self.directory = self.args.directory
@@ -100,9 +111,10 @@ class DuplicateFinder:
 
   def get_all_files(self) -> list[str]:
     """
-    Get all files in the directory.
+    ### Get all files in the directory.
 
-    Returns:
+    Returns
+    ----------
         list[str]: List of file paths.
     """
     allFiles = []
@@ -118,13 +130,15 @@ class DuplicateFinder:
 
   def compare_files(self, file1: str, file2: str) -> bool:
     """
-    Compare two files.
+    ### Compare two files.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.type == 'soft':
@@ -134,13 +148,15 @@ class DuplicateFinder:
 
   def type_check(self, extension1: str, extension2: str) -> bool:
     """
-    Check if the file types are the same.
+    ### Check if the file types are the same.
 
-    Args:
+    Parameters
+    ----------
         extension1 (str): Extension of the first file.
         extension2 (str): Extension of the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the file types are the same, False otherwise.
     """
 
@@ -157,17 +173,21 @@ class DuplicateFinder:
 
   def compare_files_hard(self, file1: str, file2: str) -> bool:
     """
-    Compare two files using hard comparison.
+    ### Compare two files using hard comparison.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.verbose > 0:
       print(f"Comparing {file1} and {file2} using hard comparison")
+
+    logging.info(f"Comparing {file1} and {file2} using hard comparison")
 
     file1Extension = os.path.splitext(file1)[1].replace('.', '')
     file2Extension = os.path.splitext(file2)[1].replace('.', '')
@@ -187,17 +207,21 @@ class DuplicateFinder:
 
   def compare_files_soft(self, file1: str, file2: str) -> bool:
     """
-    Compare two files using soft comparison.
+    ### Compare two files using soft comparison.
 
-    Args:
+    Parameters
+    ----------
         file1 (str): Path to the first file.
         file2 (str): Path to the second file.
 
-    Returns:
+    Returns
+    ----------
         bool: True if the files are considered duplicates, False otherwise.
     """
     if self.verbose > 0:
       print(f"Comparing {file1} and {file2} using soft comparison")
+
+    logging.info(f"Comparing {file1} and {file2} using soft comparison")
 
     file1Extension = os.path.splitext(file1)[1]
     file2Extension = os.path.splitext(file2)[1]
@@ -205,35 +229,42 @@ class DuplicateFinder:
     if not self.type_check(file1Extension, file2Extension):
       return False
 
-    if file1.split('.')[-1] in self.videoExtensions:
+    if file1Extension in self.videoExtensions:
       try:
         result = VideoCompare(file1, file2, verbose=self.verbose, 
                             similarity=self.similarity).compare_videos_soft(self.scale)
       except ValueError as e:
         print('ERROR: {} value is to small or to big'.format(self.scale))
-        print(getattr(e, 'message', repr(e)))
+        logging.error('The value ({}) is to small or to big'.format(self.scale))
+        logging.error('Error comparing {} and {}'.format(file1, file2))
+        logging.error(getattr(e, 'message', repr(e)))
         return False
       except FrameError as e:
         print('ERROR: error reading frames of the video {} or {}'.format(file1, file2))
-        print(getattr(e, 'message', repr(e)))
+        logging.error('Error comparing {} and {}'.format(file1, file2))
+        logging.error(getattr(e, 'message', repr(e)))
         return False
       except Exception as e:
         print('ERROR: error comparing videos {} and {}'.format(file1, file2))
-        print(getattr(e, 'message', repr(e)))
+        logging.error('Error comparing {} and {}'.format(file1, file2))
+        logging.error(getattr(e, 'message', repr(e)))
         return False
 
       if self.verbose > 0:
         print(f"Video similarity: {result[1]}")
       return result[0]
 
-    if file1.split('.')[-1] in self.imageExtensions:
+    if file1Extension in self.imageExtensions:
       try:
         result = ImageCompare(file1, file2, verbose=self.verbose, 
                             similarity=self.similarity).image_similarity()
       except Exception as e:
         print('ERROR: error comparing images {} and {}'.format(file1, file2))
-        print(getattr(e, 'message', repr(e)))
+        logging.error('Error comparing {} and {}'.format(file1, file2))
+        logging.error(getattr(e, 'message', repr(e)))
         return False
+
+      logging.info(f"Image similarity: {result[1]}")
 
       if self.verbose > 0:
         print(f"Image similarity: {result[1]}")
@@ -244,7 +275,7 @@ class DuplicateFinder:
     
   def search(self) -> None:
     """
-    Search the directory for duplicate files.
+    ### Search the directory for duplicate files.
     """
     allFiles = self.get_all_files()
     for i in range(len(allFiles)):
@@ -257,15 +288,25 @@ class DuplicateFinder:
             self.duplicates[allFiles[i]] = set([allFiles[j]])
             self.countDuplicates += 1
             continue
-          if allFiles[j] not in self.get_all_duplicates():
+          if (allFiles[j] not in self.get_all_duplicates() and
+          allFiles[i] in self.duplicates):
             self.duplicates[allFiles[i]].add(allFiles[j])
+            self.countDuplicates += 1
+            continue
+          # other file is similar enough to be considered a duplicate
+          # of the allFiles[i] file but not similar enough to be considered
+          # a duplicate of the allFiles[j] file
+          if (allFiles[j] not in self.get_all_duplicates() and
+          allFiles[i] not in self.duplicates):
+            self.duplicates[allFiles[i]] = set([allFiles[j]])
             self.countDuplicates += 1
 
   def get_all_duplicates(self) -> set[str]:
     """
-    Get all duplicate files.
+    ### Get all duplicate files.
 
-    Returns:
+    Returns
+    ----------
         list[str]: List of duplicate files.
     """
     if len(self.duplicates) == 0:
@@ -278,16 +319,18 @@ class DuplicateFinder:
 
   def order_by_info(self, list: list[str], func: Callable[[str], Any], reverse: bool) -> list[str]:
     """
-    Orders the given list of files based on the information returned by the provided function.
+    ### Orders the given list of files based on the information returned by the provided function.
 
-    Args:
+    Parameters
+    ----------
       list (list[str]): The list of files to be ordered.
       func (Callable[[str], Any]): A function that takes a file path as input and
         returns the information used for ordering.
       reverse (bool): If True, the list will be ordered in reverse (descending)
         order. If False, the list will be ordered in ascending order.
 
-    Returns:
+    Returns
+    ----------
       list[str]: The ordered list of files.
     """
     dic = [(func(file), file) for file in list]
@@ -297,17 +340,19 @@ class DuplicateFinder:
 
   def order_by_best_quality(self, list: list[str], reverse: bool) -> list[str]:
     """
-    Orders the given list of files based on the quality of the file.
-    Args:
+    ### Orders the given list of files based on the quality of the file.
+
+    Parameters
+    ----------
         list (list[str]): The list of files to be ordered.
         reverse (bool): If True, the list will be ordered in reverse (descending)
         order. If False, the list will be ordered in ascending order.
 
-    Returns:
+    Returns
+    ----------
         list[str]: The ordered list of files.
     """
     fileExtension = os.path.splitext(list[0])[1]
-    fileExtension = fileExtension.replace('.', '')
     if fileExtension in self.videoExtensions:
       return self.order_by_info(list, files.get_video_pixels, reverse)
 
@@ -319,9 +364,10 @@ class DuplicateFinder:
 
   def choose_duplicate(self) -> dict[str, set[str]]:
     """
-    Choose which duplicate file to keep.
+    ### Choose which duplicate file to keep.
 
-    Returns: 
+    Returns
+    ---------- 
       dict[str, list[str]]: A dictionary containing the file to keep as the key
         and the files to delete/move/link as the values.
     """
@@ -346,43 +392,66 @@ class DuplicateFinder:
 
   def delete_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Delete duplicate files.
+    ### Delete duplicate files.
     """
     if self.bulk:
       for file in dic:
         for duplicate in dic[file]:
-          os.remove(duplicate)
+          try:
+            os.remove(duplicate)
+          except FileNotFoundError as e:
+            logging.error(f"File {duplicate} not found to be deleted.")
+            logging.error(getattr(e, 'message', repr(e)))
+          except Exception as e:
+            logging.error(f"Error deleting file {duplicate}.")
+            logging.error(getattr(e, 'message', repr(e)))
       return
     
     for file in dic:
       for duplicate in dic[file]:
         read = input(f"Are you sure you want to delete {duplicate}? (y/n): ")
         if read.lower() == 'y':
-          os.remove(duplicate)
+          try:
+            os.remove(duplicate)
+          except FileNotFoundError as e:
+            logging.error(f"File {duplicate} not found to be deleted.")
+            logging.error(getattr(e, 'message', repr(e)))
+          except Exception as e:
+            logging.error(f"Error deleting file {duplicate}.")
+            logging.error(getattr(e, 'message', repr(e)))
+            
 
   def move_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Move duplicate files.
+    ### Move duplicate files.
     """
     os.makedirs(self.output, exist_ok=True)
     for file in dic:
       for duplicate in dic[file]:
         fileName = os.path.basename(duplicate)
-        os.rename(duplicate, os.path.join(self.output, fileName))
+        try:
+          os.rename(duplicate, os.path.join(self.output, fileName))
+        except Exception as e:
+          logging.error(f"Error moving file {duplicate}.")
+          logging.error(getattr(e, 'message', repr(e)))
 
   def link_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Create soft links for duplicate files.
+    ### Create soft links for duplicate files.
     """
     os.makedirs(self.output, exist_ok=True)
     for file in dic:
       for duplicate in dic[file]:
         fileName = os.path.basename(duplicate)
-        os.symlink(os.path.abspath(duplicate), os.path.join(self.output, fileName))
+        try:
+          os.symlink(os.path.abspath(duplicate), os.path.join(self.output, fileName))
+        except Exception as e:
+          logging.error(f"Error linking file {duplicate}.")
+          logging.error(getattr(e, 'message', repr(e)))
 
   def action_on_duplicates(self, dic: dict[str, set[str]]) -> None:
     """
-    Perform the action on duplicate files.
+    ### Perform the action on duplicate files.
     """
     {
       'delete': self.delete_duplicates,
@@ -392,7 +461,7 @@ class DuplicateFinder:
   
   def print_duplicates(self) -> None:
     """
-    Print the duplicate files.
+    ### Print the duplicate files.
     """
     for file in self.duplicates:
       print(file)
@@ -401,7 +470,7 @@ class DuplicateFinder:
 
   def main(self) -> None:
     """
-    Main function.
+    ### Main function.
     """
     self.search()
     if self.bulk and self.action == 'delete':

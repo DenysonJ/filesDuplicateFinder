@@ -28,9 +28,9 @@ If you don't speak portuguese, open this [translated readme](README-en.md).
 O projeto ainda está em desenvolvimento e as próximas atualizações serão voltadas nas seguintes tarefas:
 
 - [X] Criar testes para as principais funções
-- [ ] Criar flexibilidade para comparação soft em vídeos 
-- [ ] Criar sistema de log
-- [ ] Melhorar performance
+- [X] Criar flexibilidade para comparação soft em vídeos 
+- [ ] Criar sistema de log -> Em desenvolvimento
+- [ ] Melhorar performance -> Em desenvolvimento
 - [ ] Aumentar cobertura de testes para casos de uso
 - [ ] Criar uma Interface Gráfica
 - [ ] Criar um instalador
@@ -38,6 +38,7 @@ O projeto ainda está em desenvolvimento e as próximas atualizações serão vo
 - [ ] Compatibilidade com macOS (não testado ainda)
 - [ ] Compatibilidade com Linux
 - [ ] Criar função de similaridade de texto
+- [ ] Criar função de similaridade de PDF
 
 
 ## Pré-requisitos

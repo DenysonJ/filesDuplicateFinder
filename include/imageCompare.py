@@ -6,8 +6,6 @@ import cv2 as cv
 import numpy as np
 from skimage.metrics import structural_similarity
 
-from include.resizeImages import ImageResize
-
 class ImageCompare:
   """
   Class to compare images
@@ -37,11 +35,11 @@ class ImageCompare:
     h2, w2 = self.cv_compare_image.shape[:2]
     
     if h1 > h2 or w1 > w2:
-      self.cv_base_image = ImageResize(self.cv_base_image).resize_and_pad((h2, w2))
+      self.cv_base_image = cv.resize(self.cv_base_image, (w2, h2))
       return
     
     if h1 < h2 or w1 < w2:
-      self.cv_compare_image = ImageResize(self.cv_compare_image).resize_and_pad((h1, w1))
+      self.cv_compare_image = cv.resize(self.cv_compare_image, (w1, h1))
       return
   
   
@@ -122,4 +120,3 @@ class ImageCompare:
         cv.drawContours(filled_after, [c], 0, (0,255,0), -1)
     
     return self.similarity <= score, score, (diff, mask, filled_after)
-  
