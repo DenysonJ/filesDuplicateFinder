@@ -22,7 +22,7 @@ def parser() -> ArgumentParser:
   parser = ArgumentParser(
       description='Find duplicate files in the given directory.')
   parser.add_argument('--version', action='version',
-                      version='%(prog)s 1.0.0')
+                      version='%(prog)s 1.1.0')
 
   parser.add_argument(
       '-d', '--directory', help='Find duplicates on this directory', default='.', type=str)
