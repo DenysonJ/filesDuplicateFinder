@@ -5,6 +5,7 @@ import time
 from argparse import ArgumentParser
 from typing import Callable, Any, Sequence
 
+from include.multiProcessing import ParallelProcessing
 from include.videoCompare import FrameError, VideoCompare
 from include.imageCompare import ImageCompare
 from include.fileByteCompare import validate_file_contents
@@ -63,7 +64,7 @@ def parser() -> ArgumentParser:
   return parser
 
 
-class DuplicateFinder:
+class DuplicateFinder(ParallelProcessing):
   """
   ### Class to find duplicate files in a given directory.
 
@@ -85,6 +86,8 @@ class DuplicateFinder:
   imageExtensions = {'.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif'}
 
   def __init__(self, args: Sequence[str] | None = None, logLevel: int = logging.WARNING) -> None:
+    super().__init__()
+
     if not os.path.exists("logs/"):
       os.makedirs("logs/")
     logFileName = 'logs/duplicateFinder-' + time.strftime("%Y%m%d") + '.log'
@@ -272,34 +275,61 @@ class DuplicateFinder:
 
     # TODO: Implement soft comparison for different file types
     return False
+  
+  def _search_callback(self, result: tuple[str, str]) -> None:
+    """
+    ### Callback function for the search method.
+
+    Parameters
+    ----------
+        result (tuple[str, str, bool]): The result of the comparison.
+    """
+    file1, file2 = result
+
+    if file1 not in self.get_all_duplicates():
+      self.duplicates[file1] = set([file2])
+      self.countDuplicates += 1
+      return
+    if (file2 not in self.get_all_duplicates() and
+    file1 in self.duplicates):
+      self.duplicates[file1].add(file2)
+      self.countDuplicates += 1
+      return
+    # other file is similar enough to be considered a duplicate
+    # of the file1 file but not similar enough to be considered
+    # a duplicate of the file2 file
+    if (file2 not in self.get_all_duplicates() and
+    file1 not in self.duplicates):
+      self.duplicates[file1] = set([file2])
+      self.countDuplicates += 1
+  
+  def process(self, file1: str, file2: str) -> bool:
+    """
+    ### Compare two files using process concurrency.
+
+    Parameters
+    ----------
+        file1 (str): First file to compare
+        file2 (str): Second file to be compared
+
+    Returns
+    ----------
+        bool: True if the files are considered duplicates, False otherwise.
+    """
     
+    return (file1, file2, self.compare_files(file1, file2))
+  
   def search(self) -> None:
     """
     ### Search the directory for duplicate files.
     """
     allFiles = self.get_all_files()
     for i in range(len(allFiles)):
-      for j in range(i+1, len(allFiles)):
-        if self.compare_files(
-            allFiles[i],
-            allFiles[j]
-          ):
-          if allFiles[i] not in self.get_all_duplicates():
-            self.duplicates[allFiles[i]] = set([allFiles[j]])
-            self.countDuplicates += 1
-            continue
-          if (allFiles[j] not in self.get_all_duplicates() and
-          allFiles[i] in self.duplicates):
-            self.duplicates[allFiles[i]].add(allFiles[j])
-            self.countDuplicates += 1
-            continue
-          # other file is similar enough to be considered a duplicate
-          # of the allFiles[i] file but not similar enough to be considered
-          # a duplicate of the allFiles[j] file
-          if (allFiles[j] not in self.get_all_duplicates() and
-          allFiles[i] not in self.duplicates):
-            self.duplicates[allFiles[i]] = set([allFiles[j]])
-            self.countDuplicates += 1
+      fileList = [(allFiles[i], x) for x in allFiles[i+1:]]
+      result = self.run(fileList)
+      result = filter(lambda x: x[2], result)
+      for res in result:
+        self._search_callback(res[:2])
 
   def get_all_duplicates(self) -> set[str]:
     """
