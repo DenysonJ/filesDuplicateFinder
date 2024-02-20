@@ -76,7 +76,7 @@ class TestDuplicate(unittest.TestCase):
   def test_search_duplicates_soft_best(self) -> None:
     duplicateFinder = DuplicateFinder(['-d', 'fixtures', '-t', 'soft', '-f', 'best'])
     duplicateFinder.search()
-    duplicated = duplicateFinder.choose_duplicate()
+    duplicated = duplicateFinder._choose_duplicate()
 
     self.assertEqual(duplicated, {
       'fixtures/sample_1280x853.bmp': set(['fixtures/copy_sample.bmp', 'fixtures/sample_640x426.bmp']),
