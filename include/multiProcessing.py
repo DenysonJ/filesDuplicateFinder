@@ -1,5 +1,5 @@
 from multiprocessing import Manager, Pool, Value, cpu_count
-from multiprocessing.pool import ThreadPool, AsyncResult
+from multiprocessing.pool import ThreadPool
 from typing import Any, Iterator
 from datetime import datetime
 
@@ -32,7 +32,6 @@ class ParallelProcessing:
   _n_jobs: int
   _waiting_time: int
   _queue: Value
-  _results_async: list[AsyncResult]
   _results: list
 
   def __init__(self, n_jobs: int = -1, waiting_time: int = 1):
@@ -112,7 +111,6 @@ class ParallelProcessing:
     self._queue = manager.Value('i', 0)
     lock = manager.Lock()
     pool = Pool(processes=self._n_jobs) if not use_multithreading else ThreadPool(processes=self._n_jobs)
-    self._results_async = []
     self._results = []
 
     start_time = datetime.now()
